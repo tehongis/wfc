@@ -33,7 +33,15 @@ int main(int argc, char **argv)
 {
 
 	srand(time(NULL));
+	
+	int map[65536];
 
+	for (int c = 0; c < sizeof(map)/sizeof(int); c++ ) {
+		int random = rand() % 1024;
+		printf("%d\n",random);
+		map[c]=random;
+	}
+	
 	if((SDL_Init(SDL_INIT_VIDEO|SDL_INIT_AUDIO)==-1)) {
 		printf("Could not initialize SDL: %s.\n", SDL_GetError());
 		exit(-1);
@@ -60,34 +68,41 @@ int main(int argc, char **argv)
 	int cx = 0;
 	int cy = 0;
 
-
+	int move = 0;
 	SDL_Event event;
 
 	bool Running = true;
 	while(Running) {
-
 		while( SDL_PollEvent( &event ) ){
-			switch( event.type ){
-				case SDL_QUIT:
+			switch( event.type ) {
+				case SDL_QUIT: {
 					Running = false;
 					break;
-
+					}
+				case SDL_KEYUP: {
+					move = 0;
+					break;
+					}
 				case SDL_KEYDOWN:
 					switch ( event.key.keysym.sym ) {
 						case SDLK_ESCAPE:
 							Running = false;
 							break;
 						case SDLK_LEFT:
-							cx = cx - 1;
+							if (cx > 0) cx = cx - 1;
+							move = 4;
 							break;
 						case SDLK_RIGHT:
-							cx = cx + 1;
+							if (cx < 49) cx = cx + 1;
+							move = 2;
 							break;
 						case SDLK_UP:
-							cy = cy - 1;
+							if (cy > 0) cy = cy - 1;
+							move = 1;
 							break;
 						case SDLK_DOWN:
-							cy = cy + 1;
+							if (cy < 36) cy = cy + 1;
+							move = 3;
 							break;
 					}
 			}
@@ -107,12 +122,25 @@ int main(int argc, char **argv)
 			SDL_RenderFillRect(renderer, &cursrect);
 		}
 
-		int r = 0;
+
 		for (int y = 0;y < 37; y++ ) {
 			for (int x = 0;x < 50; x++ ) {
-				blittile(renderer,tiletexture,r++,x*16,y*16);
+				blittile(renderer,tiletexture,map[(cy+y)*50+(cx+x)],x*16,y*16);
 			}
 		}
+
+		if (cursorblinktimer < 64) {
+			SDL_RenderDrawRect(renderer, &cursrect);
+		}
+
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+		SDL_Rect inforect;
+		inforect.x = width-20;
+		inforect.y = height-20;
+		inforect.w = 20;
+		inforect.h = 20;
+		SDL_RenderFillRect(renderer, &inforect);
+		blittile(renderer,tiletexture,643 + move,width-17,height-17);
 
 
 		SDL_RenderPresent(renderer);
